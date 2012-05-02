@@ -1,13 +1,14 @@
 from tornado import web
-from tornado.httpserver import HTTPServer
-from tornado.httpclient import HTTPClient
+from tornado import httpserver
+from tornado import httpclient
 from tornado import ioloop 
 
 def handle_request(request):
-    http_client = HTTPClient()
-    response = http_client.fetch(request)
-    print(request)
+    request_client = httpclient.HTTPRequest(url=request.uri, method=request.method, body=request.body, headers=request.headers)
+    http_client = httpclient.HTTPClient()
+    response = http_client.fetch(request_client)
+    print(request_client)
 
-http_server = HTTPServer(handle_request)
+http_server = httpserver.HTTPServer(handle_request)
 http_server.listen(8080)
 ioloop.IOLoop.instance().start()
