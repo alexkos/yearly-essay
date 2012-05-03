@@ -8,6 +8,8 @@ def handle_request(request):
     #как передавать.uri один,а нужно передать куда и указать адрес proxy-server?
     http_client = httpclient.HTTPClient()
     print(request_client.__dict__)
+    request_client.__dict__['proxy_host'] = 'http://127.0.0.1'
+    request_client.__dict__['proxy_port'] = 8888    
     response = http_client.fetch(request_client)
     print(response)
 
