@@ -8,7 +8,6 @@ def handle_request(request):
     http_client = httpclient.HTTPClient()
     response = http_client.fetch(request_client)
     print(response)
-    print(response.body)
 
 http_server = httpserver.HTTPServer(handle_request)
 http_server.listen(8080)
