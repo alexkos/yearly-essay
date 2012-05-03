@@ -5,7 +5,9 @@ from tornado import ioloop
 
 def handle_request(request):
     request_client = httpclient.HTTPRequest(url=request.uri, method=request.method, body=request.body or None, headers=request.headers)
+    #как передавать.uri один,а нужно передать куда и указать адрес proxy-server?
     http_client = httpclient.HTTPClient()
+    print(request_client.__dict__)
     response = http_client.fetch(request_client)
     print(response)
 
