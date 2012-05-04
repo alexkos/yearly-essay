@@ -5,9 +5,10 @@ from tornado import ioloop
 
 def handle_request(request):
     request_client = httpclient.HTTPRequest(url=request.uri, method=request.method, body=request.body or None, headers=request.headers)
+    print(request)
     http_client = httpclient.HTTPClient()
     response = http_client.fetch(request_client)
-    
+
 http_server = httpserver.HTTPServer(handle_request)
 http_server.listen(8888)
 ioloop.IOLoop.instance().start()

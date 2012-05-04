@@ -4,11 +4,10 @@ from tornado import httpclient
 from tornado import ioloop 
 
 def handle_request(request):
-    request_client = httpclient.HTTPRequest(url=request.uri, method=request.method, body=request.body or None, headers=request.headers)
+    request_client = httpclient.HTTPRequest(url=request.uri, method=request.method, body=request.body or None, \
+									    	headers=request.headers, proxy_hostname = 'http://127.0.0.1', proxy_port = '8888')
     http_client = httpclient.HTTPClient()
     response = http_client.fetch(request_client)
-    request_client.__dict__['proxy_host'] = 'http://127.0.0.1'
-    request_client.__dict__['proxy_port'] = 8888    
 
 http_server = httpserver.HTTPServer(handle_request)
 http_server.listen(8080)
