@@ -1,11 +1,13 @@
+from tornado import web
 from tornado import httpserver
+from tornado import httpclient
 from tornado import ioloop 
 
 def handle_request(request):
-    message = "You requested %s\n" % request.uri
-    request.write("HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\n%s" % (len(message), message))
-    request.finish()
-
+    request_client = httpclient.HTTPRequest(url=request.uri, method=request.method, body=request.body or None, headers=request.headers)
+    http_client = httpclient.HTTPClient()
+    response = http_client.fetch(request_client)
+    
 http_server = httpserver.HTTPServer(handle_request)
 http_server.listen(8888)
 ioloop.IOLoop.instance().start()
