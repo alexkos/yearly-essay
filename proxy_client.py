@@ -4,15 +4,16 @@ from tornado.httpclient import HTTPRequest
 from tornado import ioloop 
 from tornado.curl_httpclient import CurlAsyncHTTPClient
 
-def handle_request(request):
-    def response_client():
-        print response
-    request_client = HTTPRequest(url=request.uri, method=request.method, body=request.body or None, \
-        headers=request.headers, proxy_host = '127.0.0.1', proxy_port = 8888)
-    http_client = CurlAsyncHTTPClient()
-    response = http_client.fetch(request_client,response_client)
+class Proxy(web.RequestHandler):
+    def get(self):
+        def response_client(response):
+            print '!!!!!!!!!!!!'
+        request_client = HTTPRequest(url = self.request.uri, method = self.request.method, body = self.request.body or None, \
+            headers = self.request.headers, proxy_host = '127.0.0.1', proxy_port = 8888)
+        http_client = CurlAsyncHTTPClient()
+        response = http_client.fetch(request_client,response_client)
 
-http_server = httpserver.HTTPServer(handle_request)
+app = web.Application([(r'.*', Proxy),])
+http_server = httpserver.HTTPServer(app)
 http_server.listen(8080)
 ioloop.IOLoop.instance().start()
-
