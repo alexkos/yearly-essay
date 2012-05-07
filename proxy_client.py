@@ -4,7 +4,7 @@ from tornado.httpclient import HTTPRequest
 from tornado import ioloop 
 from tornado.curl_httpclient import CurlAsyncHTTPClient
 
-class Proxy(web.RequestHandler):
+class ProxyClient(web.RequestHandler):
     def get(self):
         def response_client(response):
             print '!!!!!!!!!!!!'
