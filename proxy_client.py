@@ -1,8 +1,10 @@
+from tornado import options
 from tornado import web
 from tornado import httpserver
 from tornado.httpclient import HTTPRequest
 from tornado import ioloop 
 from tornado.curl_httpclient import CurlAsyncHTTPClient
+import logging
 
 class ProxyClient(web.RequestHandler):
     def response_client(self, response):
@@ -16,6 +18,8 @@ class ProxyClient(web.RequestHandler):
         http_client = CurlAsyncHTTPClient()
         response = http_client.fetch(request_client, self.response_client)
 
+logging.info('test')
+options.parse_command_line()
 app = web.Application([(r'.*', ProxyClient),])
 http_server = httpserver.HTTPServer(app)
 http_server.listen(8080)
