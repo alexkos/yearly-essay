@@ -1,3 +1,5 @@
+import logging
+from tornado import options
 from tornado import web
 from tornado import httpserver
 from tornado.httpclient import HTTPRequest
@@ -15,6 +17,8 @@ class ProxyServer(web.RequestHandler):
         http_client = CurlAsyncHTTPClient()
         response = http_client.fetch(request_client, self.response_client)
 
+options.parse_command_line()
+logging.info('Proxy server started @ 127.0.0.0:8888')
 app = web.Application([(r'.*', ProxyServer),])
 http_server = httpserver.HTTPServer(app)
 http_server.listen(8888)
