@@ -20,7 +20,7 @@ class ProxyClient(web.RequestHandler):
 
     def response_client(self, response):
         #decoded_body = DecodeAES(cipher, response.body)
-        self.write(decoded_body)
+        self.write(response.body)
         self.finish()
 
     @web.asynchronous

@@ -15,13 +15,14 @@ class ProxyServer(web.RequestHandler):
         padding = '{'
         pad = lambda s: s + (blocksize - len(s) % blocksize) * padding
         EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
-        encoded = EncodeAES(cipher, enc_body)
-        return encoded
+        encoded_body = EncodeAES(cipher, enc_body)
+        return encoded_body
 
     def response_client(self, response):
         #ReadProxy_server = M2Crypto.RSA.load_key ('proxy_server-private.key')
         #key_aes = ReadProxy_server.private_decrypt ('getting encrypt key', M2Crypto.RSA.pkcs1_oaep_padding)
-        self.write(self.encrypt(key_aes, response.body))
+        #self.write(self.encrypt(key_aes, response.body))
+        self.write(response.body)
         self.finish()
 
     @web.asynchronous
