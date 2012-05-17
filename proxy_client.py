@@ -12,25 +12,29 @@ from tornado.curl_httpclient import CurlAsyncHTTPClient
 
 class ProxyClient(web.RequestHandler):
 
-    def gen_key_aes(self, enc_body):
-        blocksize = 32
-        secret_key = os.urandom(blocksize)
-        cipher = AES.new(secret)
-        return cipher
 
     def response_client(self, response):
-        #decoded_body = DecodeAES(cipher, response.body)
+        print('#-------------------------------------------------------#')
+        print(response.headers)
+        print('#-------------------------------------------------------#')
+
+        #decrypt key AES
+        decode_key = base64.b64decode('AES_key')
+        secret_key = M2Crypto.RSA.load_key ('proxy_client-private.key')
+        key_aes = secret_key.private_decrypt ('encrypt key', M2Crypto.RSA.pkcs1_oaep_padding)
+
+        #decoding body with help key AES
+        DecodeAES = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(padding)
+        decoded_body = DecodeAES(key_aes, response.body)
+
+        #send in browser body
         self.write(response.body)
         self.finish()
 
     @web.asynchronous
     def get(self):
-        #WriteProxy_client = M2Crypto.RSA.load_pub_key('proxy_server-public.key')
-        #EncryptKey = WriteProxy_server.public_encrypt(self.gen_key_aes(), M2Crypto.RSA.pkcs1_oaep_padding)
-        self.add_header('x-Encrypt', 'EncryptKey')
         request_client = HTTPRequest(url = self.request.uri, method = self.request.method, body = self.request.body or None, \
             headers = self.request.headers, proxy_host = '127.0.0.1', proxy_port = 8888)
-        print(request_client.headers)
         http_client = CurlAsyncHTTPClient()
         response = http_client.fetch(request_client, self.response_client)
 
