@@ -46,11 +46,6 @@ class ProxyServer(web.RequestHandler):
         http_client = CurlAsyncHTTPClient()
         response = http_client.fetch(request_client, self.response_client)
 
-#M2Crypto.Rand.rand_seed(os.urandom(1024))
-#proxy_server = M2Crypto.RSA.gen_key(1024, 65537)
-#proxy_server.save_key ('proxy_server-private.key', None)
-#proxy_server.save_pub_key ('proxy_server-public.key')
-
 options.parse_command_line()
 logging.info('Proxy server started @ 127.0.0.0:8888')
 
