@@ -15,28 +15,29 @@ class ProxyServer(web.RequestHandler):
     def gen_key_aes(self):
         blocksize = 32
         secret_key = os.urandom(blocksize)
-        cipher = AES.new(secret)
-        return cipher
+        return secret_key
 
-    def encrypt_body(self, cipher, enc_body):
+    def encrypt_body(self, secret_key, enc_body):
+        cipher = AES.new(secret_key)
         padding = '{'
+        blocksize = 32
+        
         pad = lambda s: s + (blocksize - len(s) % blocksize) * padding
         EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
+        
         encoded_body = EncodeAES(cipher, enc_body)
         return encoded_body
 
     def response_client(self, response):
-        print('#-------------------------------------------------------#')
-        print(response.headers)
-        print('#-------------------------------------------------------#')
         key_aes = self.gen_key_aes()
-        public_key = M2Crypto.RSA.load_pub_key('proxy_client-public.key')
-        encrypt_key = public_key.public_encrypt(key_aes, M2Crypto.RSA.pkcs1_oaep_padding)
-
+        public_key = M2Crypto.RSA.load_pub_key ('proxy_client-public.key')
+        encrypt_key = public_key.public_encrypt (key_aes, M2Crypto.RSA.pkcs1_oaep_padding)
         key_encode_base64 = base64.b64encode(encrypt_key)
 
         self.write(self.encrypt_body(key_aes, response.body))
+        
         self.add_header('x-Encrypt', key_encode_base64)
+        self.flush()
         self.finish()
 
     @web.asynchronous

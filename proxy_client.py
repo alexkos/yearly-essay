@@ -14,21 +14,20 @@ class ProxyClient(web.RequestHandler):
 
 
     def response_client(self, response):
-        print('#-------------------------------------------------------#')
-        print(response.headers)
-        print('#-------------------------------------------------------#')
 
         #decrypt key AES
-        decode_key = base64.b64decode('AES_key')
+        decode_key = base64.b64decode(response.headers['x-Encrypt'])
         secret_key = M2Crypto.RSA.load_key ('proxy_client-private.key')
-        key_aes = secret_key.private_decrypt ('encrypt key', M2Crypto.RSA.pkcs1_oaep_padding)
+        key_aes = secret_key.private_decrypt (decode_key, M2Crypto.RSA.pkcs1_oaep_padding)
 
         #decoding body with help key AES
+        cipher = AES.new(key_aes)
+        padding = '{'
         DecodeAES = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(padding)
-        decoded_body = DecodeAES(key_aes, response.body)
+        decoded_body = DecodeAES(cipher, response.body)
 
         #send in browser body
-        self.write(response.body)
+        self.write(decoded_body)
         self.finish()
 
     @web.asynchronous
