@@ -15,6 +15,7 @@ define("host", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8080, help="run on the given port", type=int)
 define("host_proxy", default= 'localhost', help="run on the given port", type=str)
 define("port_proxy", default=8888, help="run on the given port", type=int)
+define("key", default='proxy_client-private.key', help="run on the encrypt body", type=str)
 
 class ProxyClient(web.RequestHandler):
 
@@ -28,7 +29,7 @@ class ProxyClient(web.RequestHandler):
 
     def decrypt_key_aes(self, encrypt_key):
         decode_key = base64.b64decode(encrypt_key)
-        secret_key = M2Crypto.RSA.load_key ('proxy_client-private.key')
+        secret_key = M2Crypto.RSA.load_key (options.key)
         key_aes = secret_key.private_decrypt (decode_key, M2Crypto.RSA.pkcs1_oaep_padding)
 
         return key_aes

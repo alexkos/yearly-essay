@@ -14,19 +14,20 @@ from tornado.options import define, options
 define("host", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8888, help="run on the given port", type=int)
 define("encrypt", default='yes', help="run on the encrypt body", type=str)
+define("blocksize", default=32, help="run on the encrypt body", type=int)
+define("key", default='proxy_client-public.key', help="run on the encrypt body", type=str)
+
 
 class ProxyServer(web.RequestHandler):
 
     def gen_key_aes(self):
-        blocksize = 32
-        secret_key = os.urandom(blocksize)
+        secret_key = os.urandom(options.blocksize)
         return secret_key
 
     def encrypt_body(self, secret_key, enc_body):
         cipher = AES.new(secret_key)
         padding = '{'
-        blocksize = 32        
-        pad = lambda s: s + (blocksize - len(s) % blocksize) * padding
+        pad = lambda s: s + (options.blocksize - len(s) % options.blocksize) * padding
         EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
         
         encoded_body = EncodeAES(cipher, enc_body)
@@ -34,7 +35,7 @@ class ProxyServer(web.RequestHandler):
         return encoded_body
 
     def encrypt_key_aes(self, key_secret_aes):
-        public_key = M2Crypto.RSA.load_pub_key('proxy_client-public.key')
+        public_key = M2Crypto.RSA.load_pub_key(options.key)
         encrypt_key = public_key.public_encrypt(key_secret_aes, M2Crypto.RSA.pkcs1_oaep_padding)
         key_encode_base64 = base64.b64encode(encrypt_key)
 
