@@ -11,7 +11,7 @@ from tornado.httpclient import HTTPRequest
 from tornado.curl_httpclient import CurlAsyncHTTPClient
 from tornado.options import define, options
 
-define("ip_address", default= 'localhost', help="run on the given port", type=str)
+define("host", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8888, help="run on the given port", type=int)
 define("encrypt", default='yes', help="run on the encrypt body", type=str)
 
@@ -30,6 +30,10 @@ class ProxyServer(web.RequestHandler):
         EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
         
         encoded_body = EncodeAES(cipher, enc_body)
+        print('#--------------------------------------------------------------------#')
+        print(encoded_body)
+        print('#--------------------------------------------------------------------#')
+
         return encoded_body
 
     def encrypt_key_aes(self, key_secret_aes):
@@ -42,8 +46,8 @@ class ProxyServer(web.RequestHandler):
     def response_client(self, response):
         key_aes = self.gen_key_aes()
 
-        if options.port == 'yes':
-            self.add_header('x-Encrypt', encrypt_key_aes(key_aes))
+        if options.encrypt == 'yes':
+            self.add_header('x-Encrypt', self.encrypt_key_aes(key_aes))
             self.write(self.encrypt_body(key_aes, response.body))
         else:
             self.write(response.body)
@@ -59,7 +63,10 @@ class ProxyServer(web.RequestHandler):
         response = http_client.fetch(request_client, self.response_client)
 
 tornado.options.parse_command_line()
-logging.info('Proxy server started @%s:%s' % (options.ip_address, options.port)) 
+if options.encrypt:
+    logging.info('Proxy server started @%s:%s Encrypt:%s' % (options.host, options.port, options.encrypt)) 
+else:
+    logging.info('Proxy server started @%s:%s' % (options.host, options.port)) 
 
 app = web.Application([(r'.*', ProxyServer),])
 http_server = httpserver.HTTPServer(app)
