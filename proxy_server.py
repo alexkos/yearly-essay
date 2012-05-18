@@ -11,6 +11,7 @@ from tornado.httpclient import HTTPRequest
 from tornado.curl_httpclient import CurlAsyncHTTPClient
 from tornado.options import define, options
 
+define("ip_address", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8888, help="run on the given port", type=int)
 define("encrypt", default='yes', help="run on the encrypt body", type=str)
 
@@ -58,7 +59,7 @@ class ProxyServer(web.RequestHandler):
         response = http_client.fetch(request_client, self.response_client)
 
 tornado.options.parse_command_line()
-logging.info('Proxy server started @ 127.0.0.0:%s' % (options.port)) 
+logging.info('Proxy server started @%s:%s' % (options.ip_address, options.port)) 
 
 app = web.Application([(r'.*', ProxyServer),])
 http_server = httpserver.HTTPServer(app)
