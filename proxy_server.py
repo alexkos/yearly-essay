@@ -30,15 +30,18 @@ class ProxyServer(web.RequestHandler):
         EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
         
         encoded_body = EncodeAES(cipher, enc_body)
-        print('#--------------------------------------------------------------------#')
-        print(encoded_body)
-        print('#--------------------------------------------------------------------#')
 
         return encoded_body
 
     def encrypt_key_aes(self, key_secret_aes):
         public_key = M2Crypto.RSA.load_pub_key('proxy_client-public.key')
+        print('#========================================================================#')
+        print(len(public_key))
+        print('#========================================================================#')
         encrypt_key = public_key.public_encrypt(key_secret_aes, M2Crypto.RSA.pkcs1_oaep_padding)
+        print('#--------------------------------------------------------------------#')
+        print(len(key_secret_aes))
+        print('#--------------------------------------------------------------------#')
         key_encode_base64 = base64.b64encode(encrypt_key)
 
         return key_encode_base64
