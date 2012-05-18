@@ -2,13 +2,17 @@ import os
 import base64
 import logging
 import M2Crypto
-from Crypto.Cipher import AES
-from tornado import options
+import tornado.options
 from tornado import web
+from tornado import ioloop 
+from Crypto.Cipher import AES
 from tornado import httpserver
 from tornado.httpclient import HTTPRequest
-from tornado import ioloop 
 from tornado.curl_httpclient import CurlAsyncHTTPClient
+from tornado.options import define, options
+
+define("port", default=8888, help="run on the given port", type=int)
+define("encrypt", default='yes', help="run on the encrypt body", type=str)
 
 class ProxyServer(web.RequestHandler):
 
@@ -20,23 +24,29 @@ class ProxyServer(web.RequestHandler):
     def encrypt_body(self, secret_key, enc_body):
         cipher = AES.new(secret_key)
         padding = '{'
-        blocksize = 32
-        
+        blocksize = 32        
         pad = lambda s: s + (blocksize - len(s) % blocksize) * padding
         EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
         
         encoded_body = EncodeAES(cipher, enc_body)
         return encoded_body
 
-    def response_client(self, response):
-        key_aes = self.gen_key_aes()
-        public_key = M2Crypto.RSA.load_pub_key ('proxy_client-public.key')
-        encrypt_key = public_key.public_encrypt (key_aes, M2Crypto.RSA.pkcs1_oaep_padding)
+    def encrypt_key_aes(self, key_secret_aes):
+        public_key = M2Crypto.RSA.load_pub_key('proxy_client-public.key')
+        encrypt_key = public_key.public_encrypt(key_secret_aes, M2Crypto.RSA.pkcs1_oaep_padding)
         key_encode_base64 = base64.b64encode(encrypt_key)
 
-        self.write(self.encrypt_body(key_aes, response.body))
+        return key_encode_base64
+
+    def response_client(self, response):
+        key_aes = self.gen_key_aes()
+
+        if options.port == 'yes':
+            self.add_header('x-Encrypt', encrypt_key_aes(key_aes))
+            self.write(self.encrypt_body(key_aes, response.body))
+        else:
+            self.write(response.body)
         
-        self.add_header('x-Encrypt', key_encode_base64)
         self.flush()
         self.finish()
 
@@ -47,10 +57,10 @@ class ProxyServer(web.RequestHandler):
         http_client = CurlAsyncHTTPClient()
         response = http_client.fetch(request_client, self.response_client)
 
-options.parse_command_line()
-logging.info('Proxy server started @ 127.0.0.0:8888')
+tornado.options.parse_command_line()
+logging.info('Proxy server started @ 127.0.0.0:%s' % (options.port)) 
 
 app = web.Application([(r'.*', ProxyServer),])
 http_server = httpserver.HTTPServer(app)
-http_server.listen(8888)
+http_server.listen(options.port)
 ioloop.IOLoop.instance().start()
