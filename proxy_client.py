@@ -39,6 +39,8 @@ class ProxyClient(web.RequestHandler):
             self.write(self.decrypt_body(self.decrypt_key_aes(response.headers['x-Encrypt']), response))
         else:
             self.write(response.body)
+        if self._headers.has_key('Content-Type'):
+            del self._headers['Content-Type']
         self.finish()
 
     @web.asynchronous
