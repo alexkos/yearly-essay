@@ -75,7 +75,7 @@ class ProxyClient(web.RequestHandler):
         response = http_client.fetch(request_client, self.response_client)
 
 tornado.options.parse_command_line()
-logging.info('Client server started @%s:%s -> proxy server: %s:%s' %\
+logging.info('Client server started @%s:%s -> proxy server: %s:%s'%\
     (options.host, options.port, options.host_proxy, options.port_proxy))
 
 app = web.Application([(r'.*', ProxyClient),])
