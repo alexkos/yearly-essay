@@ -15,8 +15,8 @@ define("host", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8080, help="run on the given port", type=int)
 define("host_proxy", default= 'localhost', help="run on the given port", type=str)
 define("port_proxy", default=8888, help="run on the given port", type=int)
-define("client_private_key", default='proxy_client-private.key', help="run on the encrypt body", type=str)
-define("server_public_key", default='proxy_server-private.key', help="run on the encrypt body", type=str)
+define("client_private_key", default='proxy_client-private.key', help="", type=str)
+define("server_public_key", default='proxy_server-private.key', help="", type=str)
 
 class ProxyClient(web.RequestHandler):
 
@@ -30,10 +30,10 @@ class ProxyClient(web.RequestHandler):
 
     def decrypt_key_aes(self, encrypt_key):
         decode_key = base64.b64decode(encrypt_key)
-        secret_key = M2Crypto.RSA.load_key (options.client_private_key)
-        key_aes = secret_key.private_decrypt (decode_key, M2Crypto.RSA.pkcs1_oaep_padding)
+        secretkey = M2Crypto.RSA.load_key(options.client_private_key)
+        key = secretkey.private_decrypt(decode_key,M2Crypto.RSA.pkcs1_oaep_padding)
 
-        return key_aes
+        return key
 
     def check_signature(self, decsign, checksign):
         check_sign = False
@@ -56,7 +56,7 @@ class ProxyClient(web.RequestHandler):
             if check:
                 self.write(self.decrypt_body(self.decrypt_key_aes(Encrypt),response))
             else:
-                self.write('THIS IS NOT CORRECTLY CONTENT')
+                self.write('Content is not correct!')
         else:
             self.write(response.body)
         if self._headers.has_key('Content-Type'):
@@ -65,13 +65,18 @@ class ProxyClient(web.RequestHandler):
 
     @web.asynchronous
     def get(self):
-        request_client = HTTPRequest(url = self.request.uri, method = self.request.method, body = self.request.body or None, \
-            headers = self.request.headers, proxy_host = options.host_proxy, proxy_port = options.port_proxy)
+        request_client = HTTPRequest(url = self.request.uri, 
+                                    method = self.request.method, 
+                                    body = self.request.body or None,
+                                    headers = self.request.headers, 
+                                    proxy_host = options.host_proxy, 
+                                    proxy_port = options.port_proxy)
         http_client = CurlAsyncHTTPClient()
         response = http_client.fetch(request_client, self.response_client)
 
 tornado.options.parse_command_line()
-logging.info('Client server started @%s:%s -> proxy server: %s:%s' % (options.host, options.port, options.host_proxy, options.port_proxy))
+logging.info('Client server started @%s:%s -> proxy server: %s:%s' % \
+    (options.host, options.port, options.host_proxy, options.port_proxy))
 
 app = web.Application([(r'.*', ProxyClient),])
 http_server = httpserver.HTTPServer(app)

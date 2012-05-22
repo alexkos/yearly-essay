@@ -15,8 +15,8 @@ define("host", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8888, help="run on the given port", type=int)
 define("encrypt", default='yes', help="run on the encrypt body", type=str)
 define("blocksize", default=32, help="run on the encrypt body", type=int)
-define("client_public_key", default='proxy_client-public.key', help="run on the encrypt body", type=str)
-define("server_private_key", default='proxy_server-public.key', help="run on the encrypt body", type=str)
+define("client_public_key", default='proxy_client-public.key', help="", type=str)
+define("server_private_key", default='proxy_server-public.key', help="", type=str)
 
 
 class ProxyServer(web.RequestHandler):
@@ -28,18 +28,18 @@ class ProxyServer(web.RequestHandler):
     def encrypt_body(self, secret_key, enc_body):
         cipher = AES.new(secret_key)
         padding = '{'
-        pad = lambda s: s + (options.blocksize - len(s) % options.blocksize) * padding
+        pad = lambda s: s+(options.blocksize-len(s)%options.blocksize)*padding
         EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
         
         encoded_body = EncodeAES(cipher, enc_body)
 
         return encoded_body
 
-    def encrypt_key_aes(self, key_secret_aes):
-        public_key = M2Crypto.RSA.load_pub_key(options.client_public_key)
-        encrypt_key = public_key.public_encrypt(key_secret_aes, M2Crypto.RSA.pkcs1_oaep_padding)
+    def encrypt_key_aes(self, key_aes):
+        publickey = M2Crypto.RSA.load_pub_key(options.client_public_key)
+        encryptkey = publickey.public_encrypt(key_aes, M2Crypto.RSA.pkcs1_oaep_padding)
 
-        return encrypt_key
+        return encryptkey
 
     def digital_signature(self, key):
         secretkey = M2Crypto.RSA.load_pub_key(options.server_private_key)
@@ -51,7 +51,7 @@ class ProxyServer(web.RequestHandler):
         key_aes = self.gen_key_aes()
         encrypt_key = self.encrypt_key_aes(key_aes)
         signature = self.digital_signature(encrypt_key)
-        
+
         key_encode_base64 = base64.b64encode(encrypt_key)
         sign_encode_base64 = base64.b64encode(signature)
 
@@ -70,14 +70,17 @@ class ProxyServer(web.RequestHandler):
 
     @web.asynchronous
     def get(self):
-        request_client = HTTPRequest(url = self.request.uri, method = self.request.method, body = self.request.body or None, \
-            headers = self.request.headers)
+        request_client = HTTPRequest(url = self.request.uri, 
+                                     method = self.request.method,
+                                     body = self.request.body or None,
+                                     headers = self.request.headers)
         http_client = CurlAsyncHTTPClient()
         response = http_client.fetch(request_client, self.response_client)
 
 tornado.options.parse_command_line()
 if options.encrypt:
-    logging.info('Proxy server started @%s:%s Encrypt:%s' % (options.host, options.port, options.encrypt)) 
+    logging.info('Proxy server started @%s:%s Encrypt:%s' % \
+        (options.host, options.port, options.encrypt)) 
 else:
     logging.info('Proxy server started @%s:%s' % (options.host, options.port)) 
 
