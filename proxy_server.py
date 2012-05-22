@@ -15,7 +15,8 @@ define("host", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8888, help="run on the given port", type=int)
 define("encrypt", default='yes', help="run on the encrypt body", type=str)
 define("blocksize", default=32, help="run on the encrypt body", type=int)
-define("proxy_client-public_key", default='proxy_client-public.key', help="run on the encrypt body", type=str)
+define("client_public_key", default='proxy_client-public.key', help="run on the encrypt body", type=str)
+define("server_private_key", default='proxy_server-public.key', help="run on the encrypt body", type=str)
 
 
 class ProxyServer(web.RequestHandler):
@@ -35,17 +36,31 @@ class ProxyServer(web.RequestHandler):
         return encoded_body
 
     def encrypt_key_aes(self, key_secret_aes):
-        public_key = M2Crypto.RSA.load_pub_key(options.key)
+        public_key = M2Crypto.RSA.load_pub_key(options.client_public_key)
         encrypt_key = public_key.public_encrypt(key_secret_aes, M2Crypto.RSA.pkcs1_oaep_padding)
-        key_encode_base64 = base64.b64encode(encrypt_key)
 
-        return key_encode_base64
+        return encrypt_key
+
+    def digital_signature(self, key):
+        secretkey = M2Crypto.RSA.load_pub_key(options.server_private_key)
+        sign = secretkey.public_encrypt(key, M2Crypto.RSA.pkcs1_oaep_padding)
+
+        return sign
 
     def response_client(self, response):
         key_aes = self.gen_key_aes()
+        encrypt_key = self.encrypt_key_aes(key_aes)
+        signature = self.digital_signature(encrypt_key)
+        
+        key_encode_base64 = base64.b64encode(encrypt_key)
+        sign_encode_base64 = base64.b64encode(signature)
+
+        if response.headers.has_key('Content-Type'):
+            del response.headers['Content-Type']
 
         if options.encrypt == 'yes':
-            self.add_header('x-Encrypt', self.encrypt_key_aes(key_aes))
+            self.add_header('x-Encrypt', key_encode_base64)
+            self.add_header('x-Signature', sign_encode_base64)
             self.write(self.encrypt_body(key_aes, response.body))
         else:
             self.write(response.body)
