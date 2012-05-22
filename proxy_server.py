@@ -79,7 +79,7 @@ class ProxyServer(web.RequestHandler):
 
 tornado.options.parse_command_line()
 if options.encrypt:
-    logging.info('Proxy server started @%s:%s Encrypt:%s' % \
+    logging.info('Proxy server started @%s:%s Encrypt:%s' %\
         (options.host, options.port, options.encrypt)) 
 else:
     logging.info('Proxy server started @%s:%s' % (options.host, options.port)) 
