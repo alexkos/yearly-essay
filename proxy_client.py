@@ -15,7 +15,7 @@ define("host", default= 'localhost', help="run on the given port", type=str)
 define("port", default=8080, help="run on the given port", type=int)
 define("host_proxy", default= 'localhost', help="run on the given port", type=str)
 define("port_proxy", default=8888, help="run on the given port", type=int)
-define("key", default='proxy_client-private.key', help="run on the encrypt body", type=str)
+define("proxy_client-private_key", default='proxy_client-private.key', help="run on the encrypt body", type=str)
 
 class ProxyClient(web.RequestHandler):
 
